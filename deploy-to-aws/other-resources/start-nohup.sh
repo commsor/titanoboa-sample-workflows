@@ -1,0 +1,2 @@
+#!/bin/bash 
+nohup sudo java -Dboa.server.config.path=/mnt/efs/titanoboa/boa_server_config.clj -Dboa.server.dependencies.path=/mnt/efs/titanoboa/ext-dependencies.clj -cp "./build/titanoboa.jar:./lib/*" titanoboa.server &
