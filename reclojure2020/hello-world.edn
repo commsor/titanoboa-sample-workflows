@@ -1,0 +1,50 @@
+{:name "hello-world",
+ :first-step "create-pdf",
+ :revision 1,
+ :type nil,
+ :properties {:name "World"},
+ :steps [{:id "create-pdf",
+          :type :pdf-generation,
+          :supertype :tasklet,
+          :workload-fn #titanoboa.exp/Expression{:value "io.titanoboa.tasklet.pdf/generate-pdf",
+                                                 :type "clojure"},
+          :next [["*" "s3-upload"]],
+          :properties {:pdf-sections [[:heading
+                                       #titanoboa.exp/Expression{:value "(str \"Hello, \" (:name *properties*) \"!\")",
+                                                                 :type "clojure"}]
+                                      [:paragraph
+                                       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec non iaculis lectus. Integer vel libero libero. Phasellus metus augue, consequat a viverra vel, fermentum convallis sem. Etiam venenatis laoreet quam, et adipiscing mi lobortis sit amet. Fusce eu velit vitae dolor vulputate imperdiet. Suspendisse dui risus, mollis ut tempor sed, dapibus a leo. Aenean nisi augue, placerat a cursus eu, convallis viverra urna. Nunc iaculis pharetra pretium. Suspendisse sit amet erat nisl, quis lacinia dolor. Integer mollis placerat metus in adipiscing. Fusce tincidunt sapien in quam vehicula tincidunt. Integer id ligula ante, interdum sodales enim. Suspendisse quis erat ut augue porta laoreet."]
+                                      [:paragraph
+                                       "Sed pellentesque lacus vel sapien facilisis vehicula. Quisque non lectus lacus, at varius nibh. Integer porttitor porttitor gravida. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus accumsan ante tincidunt magna dictum vulputate. Maecenas suscipit commodo leo sed mattis. Morbi dictum molestie justo eu egestas. Praesent lacus est, euismod vitae consequat non, accumsan in justo. Nam rhoncus dapibus nunc vel dignissim."]
+                                      [:paragraph
+                                       "Nulla id neque ac felis tempor pretium adipiscing ac tortor. Aenean ac metus sapien, at laoreet quam. Vivamus id dui eget neque mattis accumsan. Aliquam aliquam lacinia lorem ut dapibus. Fusce aliquam augue non libero viverra ut porta nisl mollis. Mauris in justo in nibh fermentum dapibus at ut erat. Maecenas vitae fermentum lectus. Nunc dolor nisl, commodo a pellentesque non, tincidunt id dolor. Nulla tellus neque, consectetur in scelerisque vitae, cursus vel urna. Phasellus ullamcorper ultrices nisi ac feugiat."]],
+                       :file-name "hello-world.pdf"},
+          :revision 3}
+         {:description "Uploads specified file from job directory into the given s3 bucket.",
+          :properties {:key "hello-world.pdf",
+                       :credentials {:endpoint "eu-central-1"},
+                       :file-path #titanoboa.exp/Expression{:value "(-> (java.io.File. titanoboa.exp/*jobdir* \"hello-world.pdf\")\n    .getAbsolutePath)",
+                                                            :type "clojure"},
+                       :bucket "some S3 bucket name here"},
+          :revision 2,
+          :type :aws-s3-upload,
+          :next [["*" "send-to-slack"]],
+          :id "s3-upload",
+          :supertype :tasklet,
+          :workload-fn #titanoboa.exp/Expression{:value "io.titanoboa.tasklet.aws.s3/upload",
+                                                 :type "clojure"}}
+         {:id "send-to-slack",
+          :type :http-client,
+          :supertype :tasklet,
+          :next [],
+          :workload-fn #titanoboa.exp/Expression{:value "io.titanoboa.tasklet.httpclient/request",
+                                                 :type "clojure"},
+          :properties {:url "https://hooks.slack.com/services/somewebhook",
+                       :request-method :post,
+                       :response-property-name :rest-response,
+                       :body-only? true,
+                       :form-params {:text #titanoboa.exp/Expression{:value "(str \":snake:  *SOMEONE SAYS HELLO!* :sparkles: \\n\"\n    \"path-to-bucket/hello-world.pdf\")",
+                                                                     :type "clojure"},
+                                     :type "mrkdwn"},
+                       :content-type :json},
+          :revision 1}]}
